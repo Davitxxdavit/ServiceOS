@@ -1,6 +1,14 @@
-# ServiceOS
+# ServiceOS — Restaurant Management SaaS
 
-Production-minded restaurant management SaaS for portfolio demonstration — Phase 1.
+Multi-tenant restaurant management app: live orders, a drag-and-drop kitchen board with timers, table floor plan, and menu management with images. Each restaurant is isolated with Supabase row-level security, and permissions for five staff roles (owner, manager, chef, waiter, cashier) are enforced in the database.
+
+| Sign in | Create a workspace |
+| --- | --- |
+| ![Sign-in page](docs/screenshots/login.png) | ![Sign-up page for a new restaurant workspace](docs/screenshots/signup.png) |
+
+<img src="docs/screenshots/mobile.png" alt="Sign-in page on a phone-sized screen" width="260">
+
+This is Phase 1 of a portfolio project; see the module table below for what is finished.
 
 ## Stack
 
