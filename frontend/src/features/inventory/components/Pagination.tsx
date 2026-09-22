@@ -33,7 +33,7 @@ export function Pagination({
         <label className="flex items-center gap-2">
           Rows
           <Select
-            className="h-8 w-[72px]"
+            className="h-8 w-[72px] py-0"
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
           >

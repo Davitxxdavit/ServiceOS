@@ -5,6 +5,16 @@ import type { InventoryRow, Tables } from '@/types/database'
 const INVENTORY_SELECT =
   '*, ingredients!inner(id, name, unit), suppliers(id, name)' as const
 
+/**
+ * RLS filters out rows the user may not change, so a forbidden UPDATE
+ * "succeeds" with zero rows. Treat that as an error instead of a silent no-op.
+ */
+function assertWritten(count: number | null) {
+  if (count === 0) {
+    throw new Error('Change was not saved: the item no longer exists or you lack inventory permission.')
+  }
+}
+
 export async function fetchInventory(restaurantId: string) {
   const { data, error } = await supabase
     .from('inventory')
@@ -59,34 +69,44 @@ export async function updateInventoryItem(row: InventoryRow, input: InventoryIte
   const ingredientChanged =
     row.ingredients && (row.ingredients.name !== input.name || row.ingredients.unit !== input.unit)
   if (ingredientChanged) {
-    const { error } = await supabase
+    const { error, count } = await supabase
       .from('ingredients')
-      .update({ name: input.name, unit: input.unit })
+      .update({ name: input.name, unit: input.unit }, { count: 'exact' })
       .eq('id', row.ingredient_id)
     if (error) throw error
+    assertWritten(count)
   }
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from('inventory')
-    .update({
-      quantity: input.quantity,
-      min_quantity: input.min_quantity,
-      supplier_id: input.supplier_id,
-    })
+    .update(
+      {
+        quantity: input.quantity,
+        min_quantity: input.min_quantity,
+        supplier_id: input.supplier_id,
+      },
+      { count: 'exact' },
+    )
     .eq('id', row.id)
   if (error) throw error
+  assertWritten(count)
 }
 
 export async function adjustInventoryQuantity(id: string, quantity: number) {
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from('inventory')
-    .update({ quantity: Math.max(0, quantity) })
+    .update({ quantity: Math.max(0, quantity) }, { count: 'exact' })
     .eq('id', id)
   if (error) throw error
+  assertWritten(count)
 }
 
 export async function softDeleteInventoryItem(row: InventoryRow) {
   const deletedAt = new Date().toISOString()
-  const { error } = await supabase.from('inventory').update({ deleted_at: deletedAt }).eq('id', row.id)
+  const { error, count } = await supabase
+    .from('inventory')
+    .update({ deleted_at: deletedAt }, { count: 'exact' })
+    .eq('id', row.id)
   if (error) throw error
+  assertWritten(count)
   await supabase.from('ingredients').update({ deleted_at: deletedAt }).eq('id', row.ingredient_id)
 }

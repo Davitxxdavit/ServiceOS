@@ -107,6 +107,16 @@ describe('InventoryPageView', () => {
     expect(adjust).toHaveBeenCalledWith({ id: rows[0]!.id, quantity: 5 }, expect.anything())
   })
 
+  it('labels every form field so it is reachable by its visible label', async () => {
+    renderPage()
+    await userEvent.click(screen.getByRole('button', { name: /Add item/ }))
+    expect(screen.getByLabelText('Name')).toHaveFocus()
+    expect(screen.getByLabelText('Unit')).toHaveValue('kg')
+    expect(screen.getByLabelText('In stock')).toHaveAttribute('type', 'number')
+    expect(screen.getByLabelText('Reorder at')).toHaveAttribute('type', 'number')
+    expect(screen.getByLabelText('Supplier')).toHaveDisplayValue('No supplier')
+  })
+
   it('hides write actions for read-only roles', () => {
     useAuthStore.setState({ permissions: ['inventory:read'] })
     renderPage()

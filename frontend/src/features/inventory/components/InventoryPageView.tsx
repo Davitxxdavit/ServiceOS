@@ -272,7 +272,7 @@ export function InventoryPageView() {
                   <li className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>Sort</span>
                     <Select
-                      className="h-8 w-auto"
+                      className="h-8 w-auto py-0"
                       value={`${query.sortKey}:${query.sortDir}`}
                       onChange={(e) => {
                         const [sortKey, sortDir] = e.target.value.split(':') as [SortKey, 'asc' | 'desc']
