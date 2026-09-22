@@ -1,30 +1,28 @@
-import { DashboardView } from '@/features/dashboard/components/DashboardView'
-import { OrdersPageView } from '@/features/orders/components/OrdersPageView'
-import { OrderDetailView } from '@/features/orders/components/OrderDetailView'
-import { KitchenBoardView } from '@/features/kitchen/components/KitchenBoardView'
-import { TablesFloorView } from '@/features/tables/components/TablesFloorView'
-import { MenuPageView } from '@/features/menu/components/MenuPageView'
+import { lazy } from 'react'
 
-export function DashboardPage() {
-  return <DashboardView />
-}
-
-export function OrdersPage() {
-  return <OrdersPageView />
-}
-
-export function OrderDetailPage() {
-  return <OrderDetailView />
-}
-
-export function KitchenPage() {
-  return <KitchenBoardView />
-}
-
-export function TablesPage() {
-  return <TablesFloorView />
-}
-
-export function MenuPage() {
-  return <MenuPageView />
-}
+// Each app page is its own chunk, so the login screen doesn't download
+// the kitchen board, charts, or drag-and-drop code.
+export const DashboardPage = lazy(() =>
+  import('@/features/dashboard/components/DashboardView').then((m) => ({ default: m.DashboardView })),
+)
+export const OrdersPage = lazy(() =>
+  import('@/features/orders/components/OrdersPageView').then((m) => ({ default: m.OrdersPageView })),
+)
+export const OrderDetailPage = lazy(() =>
+  import('@/features/orders/components/OrderDetailView').then((m) => ({ default: m.OrderDetailView })),
+)
+export const KitchenPage = lazy(() =>
+  import('@/features/kitchen/components/KitchenBoardView').then((m) => ({ default: m.KitchenBoardView })),
+)
+export const TablesPage = lazy(() =>
+  import('@/features/tables/components/TablesFloorView').then((m) => ({ default: m.TablesFloorView })),
+)
+export const MenuPage = lazy(() =>
+  import('@/features/menu/components/MenuPageView').then((m) => ({ default: m.MenuPageView })),
+)
+export const InventoryPage = lazy(() =>
+  import('@/features/inventory/components/InventoryPageView').then((m) => ({ default: m.InventoryPageView })),
+)
+export const AssistantPage = lazy(() =>
+  import('@/features/assistant/components/AssistantPageView').then((m) => ({ default: m.AssistantPageView })),
+)

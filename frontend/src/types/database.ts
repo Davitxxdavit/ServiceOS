@@ -207,6 +207,12 @@ export interface Database {
             referencedRelation: 'ingredients'
             referencedColumns: ['id']
           },
+          {
+            foreignKeyName: 'inventory_supplier_id_fkey'
+            columns: ['supplier_id']
+            referencedRelation: 'suppliers'
+            referencedColumns: ['id']
+          },
         ]
       }
       suppliers: TableDef<{
@@ -425,4 +431,9 @@ export type OrderWithItems = Tables<'orders'> & {
 
 export type MenuItemWithCategory = Tables<'menu_items'> & {
   menu_categories?: { name: string } | null
+}
+
+export type InventoryRow = Tables<'inventory'> & {
+  ingredients: { id: string; name: string; unit: string } | null
+  suppliers: { id: string; name: string } | null
 }

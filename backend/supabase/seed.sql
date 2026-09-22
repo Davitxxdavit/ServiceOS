@@ -101,31 +101,83 @@ values (
 )
 on conflict (slug) do nothing;
 
--- Link demo owner (requires auth user with this email already created)
+-- Demo owner (local seed — no hosted Auth dashboard required)
 do $$
 declare
-  v_user_id uuid;
+  v_user_id uuid := 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 begin
-  select id into v_user_id from auth.users where email = 'owner@serviceos.demo' limit 1;
+  insert into auth.users (
+    instance_id,
+    id,
+    aud,
+    role,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at,
+    confirmation_token,
+    email_change,
+    email_change_token_new,
+    recovery_token
+  )
+  values (
+    '00000000-0000-0000-0000-000000000000',
+    v_user_id,
+    'authenticated',
+    'authenticated',
+    'owner@serviceos.demo',
+    crypt('ServiceOS!Demo1', gen_salt('bf')),
+    timezone('utc', now()),
+    '{"provider":"email","providers":["email"]}'::jsonb,
+    '{"full_name":"Alex Owner"}'::jsonb,
+    timezone('utc', now()),
+    timezone('utc', now()),
+    '',
+    '',
+    '',
+    ''
+  )
+  on conflict (id) do nothing;
 
-  if v_user_id is null then
-    raise notice 'No auth user owner@serviceos.demo found. Create the user in Supabase Auth, then re-run the employee insert section.';
-  else
-    insert into public.users (id, email, full_name)
-    values (v_user_id, 'owner@serviceos.demo', 'Alex Owner')
-    on conflict (id) do update set full_name = excluded.full_name;
+  insert into auth.identities (
+    id,
+    user_id,
+    identity_data,
+    provider,
+    provider_id,
+    last_sign_in_at,
+    created_at,
+    updated_at
+  )
+  values (
+    v_user_id,
+    v_user_id,
+    jsonb_build_object('sub', v_user_id::text, 'email', 'owner@serviceos.demo'),
+    'email',
+    v_user_id::text,
+    timezone('utc', now()),
+    timezone('utc', now()),
+    timezone('utc', now())
+  )
+  on conflict do nothing;
 
-    insert into public.employees (id, restaurant_id, user_id, role_id, is_active, hired_at)
-    values (
-      '44444444-4444-4444-4444-444444444444',
-      '33333333-3333-3333-3333-333333333333',
-      v_user_id,
-      '11111111-1111-1111-1111-111111111001',
-      true,
-      current_date
-    )
-    on conflict (restaurant_id, user_id) do nothing;
-  end if;
+  insert into public.users (id, email, full_name)
+  values (v_user_id, 'owner@serviceos.demo', 'Alex Owner')
+  on conflict (id) do update set full_name = excluded.full_name;
+
+  insert into public.employees (id, restaurant_id, user_id, role_id, is_active, hired_at)
+  values (
+    '44444444-4444-4444-4444-444444444444',
+    '33333333-3333-3333-3333-333333333333',
+    v_user_id,
+    '11111111-1111-1111-1111-111111111001',
+    true,
+    current_date
+  )
+  on conflict (restaurant_id, user_id) do nothing;
 end $$;
 
 -- ---------------------------------------------------------------------------
@@ -159,6 +211,55 @@ insert into public.inventory (restaurant_id, ingredient_id, quantity, min_quanti
   ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777001', 4, 8),
   ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777002', 2, 6),
   ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777003', 18, 5)
+on conflict do nothing;
+
+-- Suppliers + extra stock rows so the Inventory table has enough data for filters/pagination
+insert into public.suppliers (id, restaurant_id, name, contact_name, email, phone) values
+  ('99999999-9999-9999-9999-999999999001', '33333333-3333-3333-3333-333333333333', 'Black Sea Fish Co.', 'Nino Kapanadze', 'orders@blackseafish.demo', '+995 555 100 201'),
+  ('99999999-9999-9999-9999-999999999002', '33333333-3333-3333-3333-333333333333', 'Adjara Farm Produce', 'Giorgi Tsintsadze', 'hello@adjarafarm.demo', '+995 555 100 202'),
+  ('99999999-9999-9999-9999-999999999003', '33333333-3333-3333-3333-333333333333', 'Prime Cuts Butchery', 'Levan Abashidze', 'sales@primecuts.demo', '+995 555 100 203'),
+  ('99999999-9999-9999-9999-999999999004', '33333333-3333-3333-3333-333333333333', 'Kartuli Dairy', 'Mariam Kobaladze', 'dairy@kartuli.demo', '+995 555 100 204')
+on conflict do nothing;
+
+update public.inventory set supplier_id = case ingredient_id
+    when '77777777-7777-7777-7777-777777777001' then '99999999-9999-9999-9999-999999999001'::uuid
+    when '77777777-7777-7777-7777-777777777002' then '99999999-9999-9999-9999-999999999003'::uuid
+    when '77777777-7777-7777-7777-777777777003' then '99999999-9999-9999-9999-999999999002'::uuid
+  end
+where restaurant_id = '33333333-3333-3333-3333-333333333333' and supplier_id is null;
+
+insert into public.ingredients (id, restaurant_id, name, unit) values
+  ('77777777-7777-7777-7777-777777777004', '33333333-3333-3333-3333-333333333333', 'Olive Oil', 'L'),
+  ('77777777-7777-7777-7777-777777777005', '33333333-3333-3333-3333-333333333333', 'Heavy Cream', 'L'),
+  ('77777777-7777-7777-7777-777777777006', '33333333-3333-3333-3333-333333333333', 'Butter', 'kg'),
+  ('77777777-7777-7777-7777-777777777007', '33333333-3333-3333-3333-333333333333', 'Potatoes', 'kg'),
+  ('77777777-7777-7777-7777-777777777008', '33333333-3333-3333-3333-333333333333', 'Whole Chicken', 'unit'),
+  ('77777777-7777-7777-7777-777777777009', '33333333-3333-3333-3333-333333333333', 'Lemons', 'kg'),
+  ('77777777-7777-7777-7777-777777777010', '33333333-3333-3333-3333-333333333333', 'Pistachios', 'kg'),
+  ('77777777-7777-7777-7777-777777777011', '33333333-3333-3333-3333-333333333333', 'Capers', 'jar'),
+  ('77777777-7777-7777-7777-777777777012', '33333333-3333-3333-3333-333333333333', 'Flour', 'kg'),
+  ('77777777-7777-7777-7777-777777777013', '33333333-3333-3333-3333-333333333333', 'Eggs', 'dozen'),
+  ('77777777-7777-7777-7777-777777777014', '33333333-3333-3333-3333-333333333333', 'Sulguni Cheese', 'kg'),
+  ('77777777-7777-7777-7777-777777777015', '33333333-3333-3333-3333-333333333333', 'Tomatoes', 'kg'),
+  ('77777777-7777-7777-7777-777777777016', '33333333-3333-3333-3333-333333333333', 'Garlic', 'kg'),
+  ('77777777-7777-7777-7777-777777777017', '33333333-3333-3333-3333-333333333333', 'Red Wine (cooking)', 'L')
+on conflict do nothing;
+
+insert into public.inventory (restaurant_id, ingredient_id, quantity, min_quantity, supplier_id) values
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777004', 6, 4, '99999999-9999-9999-9999-999999999002'),
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777005', 3, 4, '99999999-9999-9999-9999-999999999004'),
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777006', 5, 2, '99999999-9999-9999-9999-999999999004'),
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777007', 40, 15, '99999999-9999-9999-9999-999999999002'),
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777008', 12, 8, '99999999-9999-9999-9999-999999999003'),
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777009', 0, 3, '99999999-9999-9999-9999-999999999002'),
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777010', 1.5, 1, null),
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777011', 9, 3, null),
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777012', 22, 10, null),
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777013', 4, 6, '99999999-9999-9999-9999-999999999004'),
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777014', 7, 3, '99999999-9999-9999-9999-999999999004'),
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777015', 11, 8, '99999999-9999-9999-9999-999999999002'),
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777016', 0.4, 1, '99999999-9999-9999-9999-999999999002'),
+  ('33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777017', 8, 2, null)
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------------

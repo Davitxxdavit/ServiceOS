@@ -1,0 +1,12 @@
+{
+  "name": "serviceos",
+  "private": true,
+  "description": "Local restaurant management SaaS. Not a hosted/cloud deployment.",
+  "scripts": {
+    "dev": "npm.cmd run dev --prefix frontend -- --host 127.0.0.1",
+    "supabase:start": "npx --yes supabase start --workdir backend",
+    "supabase:stop": "npx --yes supabase stop --workdir backend",
+    "supabase:reset": "npx --yes supabase db reset --workdir backend",
+    "local": "npx --yes supabase start --workdir backend && npm.cmd run dev --prefix frontend -- --host 127.0.0.1"
+  }
+}

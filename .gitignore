@@ -7,12 +7,17 @@ dist/
 build/
 *.tsbuildinfo
 
-# Env
+# Env (keep .env.example committed)
 .env
 .env.local
 .env.*.local
 frontend/.env
 frontend/.env.local
+
+# Local Supabase
+backend/supabase/.branches
+backend/supabase/.temp
+**/.DS_Store
 
 # IDE
 .idea/

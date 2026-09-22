@@ -53,4 +53,6 @@ export const QUERY_KEYS = {
   dashboard: ['dashboard'] as const,
   activity: ['activity'] as const,
   notifications: ['notifications'] as const,
+  inventory: ['inventory'] as const,
+  suppliers: ['suppliers'] as const,
 }

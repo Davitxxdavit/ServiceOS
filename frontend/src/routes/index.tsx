@@ -10,7 +10,9 @@ import {
   VerifyEmailPage,
 } from '@/pages/auth-pages'
 import {
+  AssistantPage,
   DashboardPage,
+  InventoryPage,
   KitchenPage,
   MenuPage,
   OrderDetailPage,
@@ -37,6 +39,8 @@ export function AppRouter() {
           <Route path="kitchen" element={<KitchenPage />} />
           <Route path="tables" element={<TablesPage />} />
           <Route path="menu" element={<MenuPage />} />
+          <Route path="inventory" element={<InventoryPage />} />
+          <Route path="assistant" element={<AssistantPage />} />
         </Route>
       </Route>
 

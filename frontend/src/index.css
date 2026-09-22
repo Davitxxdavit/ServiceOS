@@ -113,3 +113,21 @@
     @apply bg-card/80 backdrop-blur-xl border border-border/60;
   }
 }
+
+/* Blinking caret at the end of a streaming assistant reply */
+.streaming-caret {
+  display: inline-block;
+  margin-left: 1px;
+  color: hsl(var(--primary));
+  animation: caret-blink 1s steps(2, start) infinite;
+}
+@keyframes caret-blink {
+  to {
+    visibility: hidden;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .streaming-caret {
+    animation: none;
+  }
+}
