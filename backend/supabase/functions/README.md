@@ -14,13 +14,25 @@ Streaming operations assistant used by the **Assistant** page.
 
 ### Run locally
 
-```bash
-# optional: real model answers
-echo "ANTHROPIC_API_KEY=sk-ant-..." > backend/supabase/functions/.env
-# optional: override model (default claude-haiku-4-5)
-echo "ANTHROPIC_MODEL=claude-haiku-4-5" >> backend/supabase/functions/.env
+`npx supabase start --workdir backend` already serves this function (demo mode) at
+`http://127.0.0.1:54321/functions/v1/ai-assistant` and reloads it on file changes.
 
+Optional, paid: real model answers. Commands are PowerShell; `Set-Content` writes a plain-text
+file (`echo ... >` in Windows PowerShell 5.1 writes UTF-16, which the env-file parser rejects).
+
+```powershell
+Set-Content backend/supabase/functions/.env "ANTHROPIC_API_KEY=sk-ant-..."     # git-ignored
+Add-Content backend/supabase/functions/.env "ANTHROPIC_MODEL=claude-haiku-4-5"  # optional override
 npx supabase functions serve ai-assistant --workdir backend --env-file backend/supabase/functions/.env
+```
+
+Tests (no global Deno install needed):
+
+```powershell
+cd backend/supabase/functions
+$env:DENO_NO_PACKAGE_JSON = '1'
+npx --yes deno@2 check ai-assistant/
+npx --yes deno@2 test ai-assistant/
 ```
 
 ### Deploy
