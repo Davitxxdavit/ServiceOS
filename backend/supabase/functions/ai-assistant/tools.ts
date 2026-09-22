@@ -22,6 +22,25 @@ function periodStart(period: Period): string {
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
+/** Same definition as the dashboard: only completed/delivered orders count as revenue. */
+const REVENUE_STATUSES = ['completed', 'delivered']
+
+export function summarizeSales(rows: { total: number | string; status: string }[], period: Period) {
+  const paid = rows.filter((o) => REVENUE_STATUSES.includes(o.status))
+  const revenue = paid.reduce((s, o) => s + Number(o.total), 0)
+  const byStatus: Record<string, number> = {}
+  for (const o of rows) byStatus[o.status] = (byStatus[o.status] ?? 0) + 1
+  return {
+    period,
+    orders: rows.length,
+    completed: paid.length,
+    cancelled: byStatus.cancelled ?? 0,
+    revenue: round2(revenue),
+    average_ticket: paid.length ? round2(revenue / paid.length) : 0,
+    by_status: byStatus,
+  }
+}
+
 export async function getSalesSummary(db: SupabaseClient, restaurantId: string, period: Period) {
   const { data, error } = await db
     .from('orders')
@@ -30,19 +49,7 @@ export async function getSalesSummary(db: SupabaseClient, restaurantId: string, 
     .is('deleted_at', null)
     .gte('created_at', periodStart(period))
   if (error) throw error
-  const rows = data ?? []
-  const valid = rows.filter((o) => o.status !== 'cancelled')
-  const revenue = valid.reduce((s, o) => s + Number(o.total), 0)
-  const byStatus: Record<string, number> = {}
-  for (const o of rows) byStatus[o.status] = (byStatus[o.status] ?? 0) + 1
-  return {
-    period,
-    orders: rows.length,
-    cancelled: byStatus.cancelled ?? 0,
-    revenue: round2(revenue),
-    average_ticket: valid.length ? round2(revenue / valid.length) : 0,
-    by_status: byStatus,
-  }
+  return summarizeSales(data ?? [], period)
 }
 
 export async function getTopItems(db: SupabaseClient, restaurantId: string, period: Period, limit = 5) {
@@ -121,7 +128,8 @@ const TONE = { type: 'string', enum: ['default', 'good', 'warning', 'bad'] }
 export const TOOL_DEFINITIONS = [
   {
     name: 'get_sales_summary',
-    description: 'Order count, revenue, average ticket and status breakdown for a period.',
+    description:
+      'Order count (all statuses), revenue and average ticket (completed/delivered orders only), and status breakdown for a period.',
     input_schema: { type: 'object', properties: { period: PERIOD_SCHEMA }, required: ['period'] },
   },
   {

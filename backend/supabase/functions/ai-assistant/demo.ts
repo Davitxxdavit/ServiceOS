@@ -140,7 +140,7 @@ export async function runDemo(opts: {
       kind: 'metrics',
       title: `Sales ${PERIOD_LABEL[period]}`,
       items: [
-        { label: 'Revenue', value: money.format(s.revenue), tone: 'good' },
+        { label: 'Revenue', value: money.format(s.revenue), hint: 'Completed & delivered', tone: 'good' },
         { label: 'Orders', value: String(s.orders) },
         { label: 'Avg ticket', value: money.format(s.average_ticket) },
         { label: 'Cancelled', value: String(s.cancelled), tone: s.cancelled ? 'warning' : 'default' },
@@ -149,7 +149,7 @@ export async function runDemo(opts: {
   })
   await streamText(
     s.orders
-      ? `${s.orders} orders ${PERIOD_LABEL[period]} for ${money.format(s.revenue)} in revenue. Try asking about top items, stock, or the floor.`
+      ? `${s.orders} orders ${PERIOD_LABEL[period]}; ${s.completed} completed for ${money.format(s.revenue)} in revenue. Try asking about top items, stock, or the floor.`
       : `No orders ${PERIOD_LABEL[period]} yet. Try asking about stock or the floor.`,
     emit,
     signal,
