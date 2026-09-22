@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState, type ReactNode } from 'react'
+import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -63,6 +63,8 @@ export function AppLayout() {
   const setCollapsed = useUiStore((s) => s.setSidebarCollapsed)
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const openButtonRef = useRef<HTMLButtonElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
 
   // Close the mobile drawer on navigation and on Escape
   useEffect(() => setMobileOpen(false), [location.pathname])
@@ -71,9 +73,13 @@ export function AppLayout() {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMobileOpen(false)
     document.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
+    // Move focus into the modal drawer, and hand it back to the trigger on close
+    const opener = openButtonRef.current
+    closeButtonRef.current?.focus()
     return () => {
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
+      opener?.focus()
     }
   }, [mobileOpen])
 
@@ -140,7 +146,13 @@ export function AppLayout() {
               {...sidebarProps}
               collapsed={false}
               headerAction={
-                <Button variant="ghost" size="icon" onClick={() => setMobileOpen(false)} aria-label="Close navigation">
+                <Button
+                  ref={closeButtonRef}
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setMobileOpen(false)}
+                  aria-label="Close navigation"
+                >
                   <X className="h-4 w-4" />
                 </Button>
               }
@@ -153,6 +165,7 @@ export function AppLayout() {
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl sm:px-6">
           <div className="flex min-w-0 items-center gap-2">
             <Button
+              ref={openButtonRef}
               variant="ghost"
               size="icon"
               className="-ml-2 md:hidden"
